@@ -1,5 +1,6 @@
-import { Menu, Search, Sun, Moon, Bell, LogOut } from 'lucide-react'
+import { Menu, Search, Sun, Moon, Bell, LogOut, KeyRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { NaturalLanguageSearch } from './NaturalLanguageSearch'
@@ -92,6 +93,14 @@ export function TopBar({ search, onSearchChange, onMenuClick, links }: TopBarPro
               <p className="px-3.5 py-2 text-xs text-slate-400 truncate border-b border-base-700/60">
                 {user?.email}
               </p>
+              <Link
+                to="/reset-password"
+                onClick={() => setProfileOpen(false)}
+                className="w-full flex items-center gap-2 px-3.5 py-2 text-sm text-slate-200 hover:bg-base-800"
+              >
+                <KeyRound size={15} />
+                Change Password
+              </Link>
               <button
                 onClick={() => signOut()}
                 className="w-full flex items-center gap-2 px-3.5 py-2 text-sm text-slate-200 hover:bg-base-800"

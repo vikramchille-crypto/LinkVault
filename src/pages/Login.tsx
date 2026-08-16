@@ -4,8 +4,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { isSupabaseConfigured } from '@/lib/supabase'
 
 export function Login() {
-  const { signInWithPassword, signUpWithPassword, signInWithGoogle } = useAuth()
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin')
+  const { signInWithPassword, signUpWithPassword, signInWithGoogle, sendPasswordResetEmail } = useAuth()
+  const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -18,6 +18,17 @@ export function Login() {
     setNotice(null)
     setLoading(true)
 
+    if (mode === 'forgot') {
+      const result = await sendPasswordResetEmail(email)
+      setLoading(false)
+      if (result.error) {
+        setError(result.error)
+      } else {
+        setNotice("If that email has an account, we've sent a password reset link.")
+      }
+      return
+    }
+
     const result =
       mode === 'signin' ? await signInWithPassword(email, password) : await signUpWithPassword(email, password)
 
@@ -28,6 +39,12 @@ export function Login() {
       setNotice('Check your inbox to confirm your email, then sign in.')
       setMode('signin')
     }
+  }
+
+  function switchMode(m: 'signin' | 'signup' | 'forgot') {
+    setMode(m)
+    setError(null)
+    setNotice(null)
   }
 
   return (
@@ -48,23 +65,30 @@ export function Login() {
             </div>
           )}
 
-          <div className="flex bg-base-800 rounded-xl p-1 mb-5">
-            {(['signin', 'signup'] as const).map((m) => (
-              <button
-                key={m}
-                onClick={() => {
-                  setMode(m)
-                  setError(null)
-                  setNotice(null)
-                }}
-                className={`flex-1 text-sm font-medium py-2 rounded-lg transition-colors ${
-                  mode === m ? 'bg-accent-600 text-white' : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                {m === 'signin' ? 'Sign In' : 'Sign Up'}
-              </button>
-            ))}
-          </div>
+          {mode !== 'forgot' && (
+            <div className="flex bg-base-800 rounded-xl p-1 mb-5">
+              {(['signin', 'signup'] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => switchMode(m)}
+                  className={`flex-1 text-sm font-medium py-2 rounded-lg transition-colors ${
+                    mode === m ? 'bg-accent-600 text-white' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {m === 'signin' ? 'Sign In' : 'Sign Up'}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {mode === 'forgot' && (
+            <div className="mb-5">
+              <h2 className="text-sm font-semibold text-slate-100">Reset your password</h2>
+              <p className="text-xs text-slate-400 mt-1">
+                Enter your email and we'll send you a link to set a new password.
+              </p>
+            </div>
+          )}
 
           {error && (
             <div className="mb-4 text-sm text-red-300 bg-red-500/10 border border-red-500/20 rounded-xl px-3.5 py-2.5">
@@ -89,18 +113,31 @@ export function Login() {
                 placeholder="you@example.com"
               />
             </div>
-            <div>
-              <label className="field-label">Password</label>
-              <input
-                type="password"
-                required
-                minLength={6}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="field-input"
-                placeholder="••••••••"
-              />
-            </div>
+
+            {mode !== 'forgot' && (
+              <div>
+                <label className="field-label">Password</label>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="field-input"
+                  placeholder="••••••••"
+                />
+                {mode === 'signin' && (
+                  <button
+                    type="button"
+                    onClick={() => switchMode('forgot')}
+                    className="text-xs text-slate-400 hover:text-accent-400 transition-colors mt-1.5"
+                  >
+                    Forgot password?
+                  </button>
+                )}
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={loading}
@@ -108,23 +145,36 @@ export function Login() {
                 disabled:opacity-60 text-white font-semibold text-sm py-2.5 rounded-xl transition-colors"
             >
               {loading && <Loader2 size={15} className="animate-spin" />}
-              {mode === 'signin' ? 'Sign In' : 'Create Account'}
+              {mode === 'signin' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Send Reset Link'}
             </button>
           </form>
 
-          <div className="flex items-center gap-3 my-5">
-            <div className="h-px bg-base-700 flex-1" />
-            <span className="text-xs text-slate-500">or</span>
-            <div className="h-px bg-base-700 flex-1" />
-          </div>
+          {mode === 'forgot' && (
+            <button
+              onClick={() => switchMode('signin')}
+              className="w-full text-center text-xs text-slate-400 hover:text-accent-400 transition-colors mt-4"
+            >
+              Back to sign in
+            </button>
+          )}
 
-          <button
-            onClick={() => signInWithGoogle()}
-            className="w-full flex items-center justify-center gap-2 bg-base-800 hover:bg-base-700 border border-base-700
-              text-slate-200 font-medium text-sm py-2.5 rounded-xl transition-colors"
-          >
-            Continue with Google
-          </button>
+          {mode !== 'forgot' && (
+            <>
+              <div className="flex items-center gap-3 my-5">
+                <div className="h-px bg-base-700 flex-1" />
+                <span className="text-xs text-slate-500">or</span>
+                <div className="h-px bg-base-700 flex-1" />
+              </div>
+
+              <button
+                onClick={() => signInWithGoogle()}
+                className="w-full flex items-center justify-center gap-2 bg-base-800 hover:bg-base-700 border border-base-700
+                  text-slate-200 font-medium text-sm py-2.5 rounded-xl transition-colors"
+              >
+                Continue with Google
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

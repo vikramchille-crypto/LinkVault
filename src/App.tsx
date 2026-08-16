@@ -1,10 +1,11 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { CategoriesProvider } from '@/contexts/CategoriesContext'
 import { SourcesProvider } from '@/contexts/SourcesContext'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Spinner } from '@/components/common/Loading'
 import { Login } from '@/pages/Login'
+import { ResetPassword } from '@/pages/ResetPassword'
 import { Dashboard } from '@/pages/Dashboard'
 import { AllLinks } from '@/pages/AllLinks'
 import { Favorites } from '@/pages/Favorites'
@@ -29,6 +30,18 @@ function FullScreenLoader() {
 
 export default function App() {
   const { user, loading } = useAuth()
+  const location = useLocation()
+
+  // Standalone route, deliberately checked before the loading/auth gate
+  // below: it needs to work both for a logged-out visitor who just clicked
+  // a password-reset email link (Supabase gives them a temporary recovery
+  // session, separate from a normal login) and for an already logged-in
+  // user changing their password from the account menu. Rendering it
+  // outside AppLayout keeps it a clean, focused screen either way, with no
+  // sidebar/dashboard chrome.
+  if (location.pathname === '/reset-password') {
+    return loading ? <FullScreenLoader /> : <ResetPassword />
+  }
 
   if (loading) return <FullScreenLoader />
   if (!user) return <Login />
