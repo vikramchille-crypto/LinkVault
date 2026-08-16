@@ -1,0 +1,14 @@
+# Supabase project configuration.
+# See https://supabase.com/docs/guides/local-development/cli/config
+
+[functions.link-preview]
+verify_jwt = true
+
+[functions.ai-categorize]
+verify_jwt = true
+
+[functions.nl-search]
+verify_jwt = true
+
+[functions.check-link]
+verify_jwt = true
