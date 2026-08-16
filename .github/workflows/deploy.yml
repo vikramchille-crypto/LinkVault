@@ -1,0 +1,39 @@
+name: Deploy to Cloudflare Workers
+
+# Builds and deploys LinkVault on every push to main/master, using the
+# Wrangler CLI directly rather than Cloudflare's dashboard Git integration
+# build settings (which proved unreliable for this project type — this
+# workflow gives full, explicit control over each step instead).
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch: {} # lets you manually trigger a deploy from the Actions tab
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
