@@ -19,6 +19,7 @@ import { ManageTags } from '@/pages/ManageTags'
 import { DataTools } from '@/pages/DataTools'
 import { LinkHealth } from '@/pages/LinkHealth'
 import { Analytics } from '@/pages/Analytics'
+import { Admin } from '@/pages/Admin'
 
 function FullScreenLoader() {
   return (
@@ -65,6 +66,7 @@ export default function App() {
               <Route path="/data" element={<DataTools {...ctx} />} />
               <Route path="/health" element={<LinkHealth {...ctx} />} />
               <Route path="/analytics" element={<Analytics {...ctx} />} />
+              <Route path="/admin" element={<Admin />} />
               {/* Handled by AppLayout's effect (Android Share Target lands
                   here); render nothing while it processes and redirects. */}
               <Route path="/share" element={null} />
